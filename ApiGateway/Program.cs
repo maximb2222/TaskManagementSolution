@@ -4,7 +4,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddReverseProxy()
     .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
-builder.Services.AddHealthChecks();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -15,6 +14,5 @@ app.UseSwagger();
 app.UseSwaggerUI();
 
 app.MapReverseProxy();
-app.MapHealthChecks("/health");
 
 app.Run();
