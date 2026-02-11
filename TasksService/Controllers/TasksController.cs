@@ -37,17 +37,20 @@ public class TasksController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<TaskItem>> Create([FromBody] CreateTaskDto dto)
     {
-        var gateway = _httpClientFactory.CreateClient("Gateway");
+        var usersServiceClient = _httpClientFactory.CreateClient("UsersService");
+        var projectsServiceClient = _httpClientFactory.CreateClient("ProjectsService");
 
-        // Проверяем, что пользователь существует
-        var userResponse = await gateway.GetAsync($"/users/api/users/{dto.AssigneeId}");
+        var userResponse = await usersServiceClient.GetAsync($"/api/users/{dto.AssigneeId}");
         if (userResponse.StatusCode == HttpStatusCode.NotFound)
             return BadRequest("Assignee user not found");
+        if (!userResponse.IsSuccessStatusCode)
+            return StatusCode((int)HttpStatusCode.BadGateway, "Failed to validate assignee user");
 
-        // Проверяем, что проект существует
-        var projectResponse = await gateway.GetAsync($"/projects/api/projects/{dto.ProjectId}");
+        var projectResponse = await projectsServiceClient.GetAsync($"/api/projects/{dto.ProjectId}");
         if (projectResponse.StatusCode == HttpStatusCode.NotFound)
             return BadRequest("Project not found");
+        if (!projectResponse.IsSuccessStatusCode)
+            return StatusCode((int)HttpStatusCode.BadGateway, "Failed to validate project");
 
         var task = new TaskItem
         {
