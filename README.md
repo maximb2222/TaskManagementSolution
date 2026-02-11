@@ -1,29 +1,31 @@
 # TaskManagementSolution
 
-Очень простой учебный проект на C# (.NET 8) про управление задачами.
+Это простой учебный проект про задачи.
+Идея такая: есть пользователи, проекты и задачи.  
+Все это работает через 4 маленьких сервиса.
 
-Что здесь есть:
-- `UsersService` - хранит пользователей.
-- `ProjectsService` - хранит проекты.
-- `TasksService` - хранит задачи.
-- `ApiGateway` - единая точка входа (перенаправляет запросы в сервисы).
+## Что тут есть
 
-## Что нужно заранее
+- `UsersService` - создание и вход пользователей.
+- `ProjectsService` - создание проектов.
+- `TasksService` - создание задач и смена статуса.
+- `ApiGateway` - единый адрес, через который удобно отправлять все запросы.
 
-1. Установить `.NET 8 SDK`.
-2. Установить `PostgreSQL`.
-3. Создать базу данных `task_management`.
-4. В файлах настроек сервисов поменять пароль:
+## Что нужно для запуска
+
+1. `.NET 8 SDK`
+2. `PostgreSQL`
+3. База данных `task_management`
+
+В файлах ниже укажите свой пароль к PostgreSQL вместо `your_password`:
+
 - `UsersService/appsettings.json`
 - `ProjectsService/appsettings.json`
 - `TasksService/appsettings.json`
 
-Там строка подключения вида:
-`Host=localhost;Port=5432;Database=task_management;Username=postgres;Password=your_password`
+## Как запустить
 
-## Первый запуск (по шагам)
-
-Откройте 4 терминала в корне проекта и запустите:
+Откройте 4 терминала в папке проекта и выполните:
 
 ```bash
 dotnet run --project UsersService
@@ -32,16 +34,57 @@ dotnet run --project TasksService
 dotnet run --project ApiGateway
 ```
 
-После запуска откройте Swagger:
-- Gateway: `http://localhost:5207/swagger`
-- Users: `http://localhost:5210/swagger`
-- Projects: `http://localhost:5065/swagger`
-- Tasks: `http://localhost:5124/swagger`
+После запуска откройте:
 
-## Как проверить, что все работает
+- `http://localhost:5207/swagger` (Gateway)
 
-1. Создайте пользователя (`POST /api/users/register`).
-2. Создайте проект (`POST /api/projects`).
-3. Создайте задачу (`POST /api/tasks`) и передайте `AssigneeId` и `ProjectId`.
+## Демонстрация работы (очень просто)
 
-Если пользователь или проект не существуют, сервис задач не даст создать задачу.
+Все шаги ниже делайте в Swagger у Gateway.
+
+1. Создайте пользователя: `POST /users/api/users/register`
+
+```json
+{
+  "userName": "ivan",
+  "email": "ivan@mail.com",
+  "password": "123456"
+}
+```
+
+Скопируйте `id` из ответа.
+
+2. Создайте проект: `POST /projects/api/projects`
+
+```json
+{
+  "name": "Мой проект",
+  "description": "Учебный пример",
+  "ownerId": "ID_ПОЛЬЗОВАТЕЛЯ_ИЗ_ШАГА_1"
+}
+```
+
+Скопируйте `id` проекта.
+
+3. Создайте задачу: `POST /tasks/api/tasks`
+
+```json
+{
+  "title": "Сделать README",
+  "description": "Написать простое описание",
+  "projectId": "ID_ПРОЕКТА_ИЗ_ШАГА_2",
+  "assigneeId": "ID_ПОЛЬЗОВАТЕЛЯ_ИЗ_ШАГА_1"
+}
+```
+
+4. Посмотрите все задачи: `GET /tasks/api/tasks`
+
+5. Поменяйте статус задачи: `PUT /tasks/api/tasks/{id}/status`
+
+В body передайте число:
+- `0` - New
+- `1` - InProgress
+- `2` - Done
+
+Если указать несуществующий `user` или `project`, задача не создастся.  
+Это и есть проверка, что сервисы связаны между собой и работают правильно.
